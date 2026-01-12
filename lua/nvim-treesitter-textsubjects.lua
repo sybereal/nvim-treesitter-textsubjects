@@ -1,6 +1,3 @@
-local queries = require("nvim-treesitter.query")
-local parsers = require('nvim-treesitter.parsers')
-
 local M = {}
 
 function M.configure(config_overrides)
@@ -14,13 +11,14 @@ function M.is_supported(lang)
             return false
         end
 
-        if not parsers.has_parser(nested_lang) then
+        -- Officially documented way to check for parser availability
+        if not vim.treesitter.language.add(nested_lang) then
             return false
         end
 
-        if queries.has_query_files(nested_lang, 'textsubjects-smart')
-            or queries.has_query_files(nested_lang, 'textsubjects-container-outer')
-            or queries.has_query_files(nested_lang, 'textsubjects-container-inner') then
+        if vim.treesitter.query.get(nested_lang, 'textsubjects-smart')
+            or vim.treesitter.query.get(nested_lang, 'textsubjects-container-outer')
+            or vim.treesitter.query.get(nested_lang, 'textsubjects-container-inner') then
             return true
         end
         if seen[nested_lang] then
@@ -28,8 +26,8 @@ function M.is_supported(lang)
         end
         seen[nested_lang] = true
 
-        if queries.has_query_files(nested_lang, 'injections') then
-            local query = queries.get_query(nested_lang, 'injections')
+        local query = vim.treesitter.query.get(nested_lang, 'injections')
+        if query then
             for _, capture in ipairs(query.info.captures) do
                 if capture == 'language' or has_nested_textsubjects_language(capture) then
                     return true
